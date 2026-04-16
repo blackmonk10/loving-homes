@@ -1,14 +1,60 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import signupDogImg from "../assets/signup-dog.jpg";
 import dogBedImg from "../assets/dog-bed-pod.jpg";
 import dogPortrait from "../assets/dog-portrait-1.jpg";
 import { Eye, EyeOff, Check, ArrowRight } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    petName: "",
+    petType: "",
+    password: "",
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      // Simulate API call for registration
+      const userData = {
+        fullName: formData.fullName,
+        email: formData.email,
+        pet: {
+          name: formData.petName,
+          type: formData.petType,
+        },
+      };
+      
+      // Call login to store user data
+      login(userData);
+      
+      // Redirect to profile after successful signup
+      navigate("/profile");
+    } catch (error) {
+      console.error("Signup failed:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-surface">
@@ -44,12 +90,16 @@ const SignUp = () => {
             <h1 className="text-2xl font-extrabold text-primary mb-2">Create Your Profile</h1>
             <p className="text-on-surface-variant text-sm mb-10">Personalize your pet's sanctuary experience.</p>
 
-            <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
+            <form className="space-y-5" onSubmit={handleSubmit}>
               <div>
                 <label className="block text-sm font-semibold text-on-surface mb-2">Full Name</label>
                 <input
                   type="text"
+                  name="fullName"
                   placeholder="Elizabeth Bennett"
+                  value={formData.fullName}
+                  onChange={handleInputChange}
+                  required
                   className="w-full px-4 py-3 rounded-lg bg-surface-container-high text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
                 />
               </div>
@@ -58,7 +108,11 @@ const SignUp = () => {
                 <label className="block text-sm font-semibold text-on-surface mb-2">Email Address</label>
                 <input
                   type="email"
+                  name="email"
                   placeholder="elizabeth@example.com"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  required
                   className="w-full px-4 py-3 rounded-lg bg-surface-container-high text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
                 />
               </div>
@@ -68,17 +122,27 @@ const SignUp = () => {
                   <label className="block text-sm font-semibold text-on-surface mb-2">Pet's Name</label>
                   <input
                     type="text"
+                    name="petName"
                     placeholder="Luna"
+                    value={formData.petName}
+                    onChange={handleInputChange}
+                    required
                     className="w-full px-4 py-3 rounded-lg bg-surface-container-high text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-on-surface mb-2">Pet Type</label>
-                  <select className="w-full px-4 py-3 rounded-lg bg-surface-container-high text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 appearance-none">
-                    <option>Select</option>
-                    <option>Dog</option>
-                    <option>Cat</option>
-                    <option>Other</option>
+                  <select
+                    name="petType"
+                    value={formData.petType}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-3 rounded-lg bg-surface-container-high text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 appearance-none"
+                  >
+                    <option value="">Select</option>
+                    <option value="dog">Dog</option>
+                    <option value="cat">Cat</option>
+                    <option value="other">Other</option>
                   </select>
                 </div>
               </div>
@@ -88,7 +152,12 @@ const SignUp = () => {
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
+                    name="password"
                     placeholder="••••••••••••"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    required
+                    minLength={8}
                     className="w-full px-4 py-3 rounded-lg bg-surface-container-high text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 pr-12"
                   />
                   <button
@@ -98,6 +167,20 @@ const SignUp = () => {
                   >
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
+                </div>
+                <p className="text-xs text-on-surface-variant mt-1.5 tracking-wide uppercase">
+                  Minimum 8 characters with one special symbol
+                </p>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-3.5 rounded-full bg-gradient-primary text-primary-foreground font-semibold text-sm hover:scale-[1.01] transition-transform shadow-ambient disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? "Creating Account..." : "Create Account"}
+              </button>
+            </form>
                 </div>
                 <p className="text-xs text-on-surface-variant mt-1.5 tracking-wide uppercase">
                   Minimum 8 characters with one special symbol
@@ -119,10 +202,10 @@ const SignUp = () => {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <button className="flex items-center justify-center gap-2 py-3 rounded-lg ghost-border text-sm font-medium text-on-surface hover:bg-surface-container-low transition-colors">
+              <button type="button" className="flex items-center justify-center gap-2 py-3 rounded-lg ghost-border text-sm font-medium text-on-surface hover:bg-surface-container-low transition-colors">
                 Google
               </button>
-              <button className="flex items-center justify-center gap-2 py-3 rounded-lg ghost-border text-sm font-medium text-on-surface hover:bg-surface-container-low transition-colors">
+              <button type="button" className="flex items-center justify-center gap-2 py-3 rounded-lg ghost-border text-sm font-medium text-on-surface hover:bg-surface-container-low transition-colors">
                 Apple
               </button>
             </div>
